@@ -116,11 +116,14 @@
   <widget class="QSlider" name="hsVolume">
    <property name="geometry">
     <rect>
-     <x>150</x>
+     <x>110</x>
      <y>190</y>
-     <width>141</width>
+     <width>121</width>
      <height>18</height>
     </rect>
+   </property>
+   <property name="maximum">
+    <number>100</number>
    </property>
    <property name="orientation">
     <enum>Qt::Horizontal</enum>
@@ -129,10 +132,10 @@
   <widget class="QLabel" name="lVolume">
    <property name="geometry">
     <rect>
-     <x>40</x>
+     <x>30</x>
      <y>190</y>
-     <width>91</width>
-     <height>16</height>
+     <width>71</width>
+     <height>20</height>
     </rect>
    </property>
    <property name="text">
@@ -151,8 +154,20 @@
      <height>18</height>
     </rect>
    </property>
+   <property name="maximum">
+    <number>100</number>
+   </property>
+   <property name="pageStep">
+    <number>10</number>
+   </property>
    <property name="orientation">
     <enum>Qt::Horizontal</enum>
+   </property>
+   <property name="tickPosition">
+    <enum>QSlider::NoTicks</enum>
+   </property>
+   <property name="tickInterval">
+    <number>0</number>
    </property>
   </widget>
   <widget class="QLabel" name="lProgress">
@@ -185,6 +200,19 @@
    </property>
    <property name="alignment">
     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="btnMute">
+   <property name="geometry">
+    <rect>
+     <x>250</x>
+     <y>190</y>
+     <width>41</width>
+     <height>28</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string/>
    </property>
   </widget>
  </widget>
