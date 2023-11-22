@@ -52,6 +52,8 @@ Widget::Widget(QWidget *parent)
 Widget::~Widget()
 {
     delete m_player;
+    delete m_playlist;
+    delete m_playlist_model;
     delete ui;
 }
 
