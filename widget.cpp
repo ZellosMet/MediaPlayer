@@ -32,28 +32,53 @@ Widget::Widget(QWidget *parent)
     ui->lVolume->setText(QString("Volume:").append(QString::number(m_player->volume())));
     ui->lDuration->setText("00:00");
     ui->hsVolume->setValue(m_player->volume());
-    mute = false;
-    connect(m_player, &QMediaPlayer::positionChanged, this, &Widget::positionChanged);
+    muted = false;
+    connect(m_player, &QMediaPlayer::positionChanged, this, &Widget::on_positionChanged);
+    connect(m_player, &QMediaPlayer::durationChanged, this, &Widget::on_durationChanged);
+
+    //                      PlayList init
+
+    m_playlist_model = new QStandardItemModel(this);
+    ui->tvPlayList->setModel(m_playlist_model);
+    m_playlist_model->setHorizontalHeaderLabels(QStringList() << "Audio track" << "File path");
+    ui->tvPlayList->hideColumn(1);
+    ui->tvPlayList->horizontalHeader()->setStretchLastSection(true);
+    ui->tvPlayList->setEditTriggers(QAbstractItemView::NoEditTriggers);
+
+    m_playlist = new QMediaPlaylist(m_player);
+    m_player->setPlaylist(m_playlist);
 }
 
 Widget::~Widget()
 {
-    delete this->m_player;
+    delete m_player;
     delete ui;
 }
 
 
 void Widget::on_btnOpen_clicked()
 {
-   QString file = QFileDialog::getOpenFileName(
-                                                this,                                                     //родительское окно
-                                                tr("Open file"),                                          //заголовок окна диалога
-                                                "C:\\Users\\Zello\\OneDrive\\Рабочий стол\\Музыка",       //рабочий каталог
-                                                tr("Audio files (*.mp3 *.flac)")                          //выбор форматов файла
-                                              );
-   QString name_song = file.split('/').back();
-   ui->lComposition -> setText(name_song);
-   m_player->setMedia(QUrl::fromLocalFile(file));
+//  QString file = QFileDialog::getOpenFileName(
+//                                                this,                                                     //родительское окно
+//                                                tr("Open file"),                                          //заголовок окна диалога
+//                                                "C:\\Users\\Zello\\OneDrive\\Рабочий стол\\Музыка",       //рабочий каталог
+//                                                tr("Audio files (*.mp3 *.flac)")                          //выбор форматов файла
+//                                              );
+//   QString name_song = file.split('/').last();
+//   this->setWindowTitle(QString("Winamp - ").append(file.split('/').last()));
+//   ui->lComposition -> setText(name_song);
+//   m_player->setMedia(QUrl::fromLocalFile(file));
+
+    QStringList files = QFileDialog::getOpenFileNames(this, "Open files",  "C:\\Users\\Zello\\OneDrive\\Рабочий стол\\Музыка", "Audio files (*.mp3 *.flac)");
+    for(QString filesPath: files)
+    {
+        QList<QStandardItem*> items;
+        items.append(new QStandardItem(QDir(filesPath).dirName()));
+        items.append(new QStandardItem(filesPath));
+        m_playlist_model->appendRow(items);
+        m_playlist->addMedia(QUrl(filesPath));
+    }
+
 }
 
 
@@ -67,14 +92,19 @@ void Widget::on_hsVolume_valueChanged(int value)
 void Widget::on_btnPlay_clicked()
 {
     m_player->play();
-    ui->lDuration->setText(QString(QTime::fromMSecsSinceStartOfDay(m_player->duration()).toString("mm:ss")));
 }
 
-void Widget::positionChanged(qint64 position)
+void Widget::on_positionChanged(qint64 position)
 {
     ui->hsProgress->setMaximum(m_player->duration());
     ui->hsProgress->setValue(position);
     ui->lProgress->setText(QString(QTime::fromMSecsSinceStartOfDay(position).toString("mm:ss")));
+}
+
+void Widget::on_durationChanged(qint64 duration)
+{
+    ui->hsProgress->setMaximum(duration);
+    ui->lDuration->setText(QString(QTime::fromMSecsSinceStartOfDay(duration).toString("mm:ss")));
 }
 
 void Widget::on_hsProgress_sliderMoved(int position)
@@ -92,20 +122,22 @@ void Widget::on_btnStop_clicked()
     m_player->stop();
 }
 
-
 void Widget::on_btnMute_clicked()
 {
-    if(!mute)
-    {
-        mute = !mute;
-        ui->btnMute->setIcon(style()->standardIcon(QStyle::SP_MediaVolumeMuted));
-        m_player->setMuted(mute);
-    }
-    else
-    {
-        mute = !mute;
-        ui->btnMute->setIcon(style()->standardIcon(QStyle::SP_MediaVolume));
-        m_player->setMuted(mute);
-    }
+    muted = !muted;
+    m_player->setMuted(muted);
+    ui->btnMute->setIcon(style()->standardIcon(muted?QStyle::SP_MediaVolumeMuted:QStyle::SP_MediaVolume));
+}
+
+
+void Widget::on_btnPrev_clicked()
+{
+    m_playlist->previous();
+}
+
+
+void Widget::on_btnNext_clicked()
+{
+    m_playlist->next();
 }
 

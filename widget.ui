@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>322</width>
-    <height>267</height>
+    <height>441</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -213,6 +213,16 @@
    </property>
    <property name="text">
     <string/>
+   </property>
+  </widget>
+  <widget class="QTableView" name="tvPlayList">
+   <property name="geometry">
+    <rect>
+     <x>30</x>
+     <y>230</y>
+     <width>261</width>
+     <height>192</height>
+    </rect>
    </property>
   </widget>
  </widget>
