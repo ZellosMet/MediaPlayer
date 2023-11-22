@@ -10,7 +10,8 @@ Widget::Widget(QWidget *parent)
     , ui(new Ui::Widget)
 {
     ui->setupUi(this);
-    //проверка git
+
+    //test push github
 
     //                      Button style
 
@@ -37,6 +38,7 @@ Widget::Widget(QWidget *parent)
 
 Widget::~Widget()
 {
+    delete this->m_player;
     delete ui;
 }
 
@@ -49,8 +51,8 @@ void Widget::on_btnOpen_clicked()
                                                 "C:\\Users\\Zello\\OneDrive\\Рабочий стол\\Музыка",       //рабочий каталог
                                                 tr("Audio files (*.mp3 *.flac)")                          //выбор форматов файла
                                               );
-   QStringList soung_name = file.split('/');
-   ui->lComposition -> setText(soung_name.last());
+   QString name_song = file.split('/').back();
+   ui->lComposition -> setText(name_song);
    m_player->setMedia(QUrl::fromLocalFile(file));
 }
 
