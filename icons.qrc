@@ -2,5 +2,10 @@
     <qresource prefix="/new_icons">
         <file>ICO/ico_winamp.ico</file>
         <file>ICO/winamp.ico</file>
+        <file>ICO/random.ico</file>
+        <file>ICO/loop.ico</file>
+        <file>ICO/trash.ico</file>
+        <file>ICO/file-delete.ico</file>
     </qresource>
+    <qresource prefix="/"/>
 </RCC>

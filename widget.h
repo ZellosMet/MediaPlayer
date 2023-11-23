@@ -5,6 +5,7 @@
 #include <QMediaPlayer>
 #include <QMediaPlaylist>
 #include <QStandardItemModel>
+#include <QItemSelectionModel>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class Widget; }
@@ -30,8 +31,11 @@ private slots:
     void on_btnMute_clicked();
     void on_btnPrev_clicked();
     void on_btnNext_clicked();
-
     void on_btnPBM_clicked();
+    void on_btnClear_clicked();
+    void SavePlaylist(QString filename);
+    void Widget::LoadPlaylist(QString filename);
+    void on_btnRemove_clicked();
 
 private:
     Ui::Widget *ui;
@@ -40,5 +44,7 @@ private:
     QStandardItemModel* m_playlist_model;
     bool muted;
     bool PBM_loop;
+    qint64 select_element;
+    QString DEFAULT_PLAYLIST = "C:\\Qt\\Learning\\MediaPlayer\\playlist.m3u";
 };
 #endif // WIDGET_H

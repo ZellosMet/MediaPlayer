@@ -4,6 +4,8 @@
 #include <QFileDialog>
 #include <QDir>
 #include <QTime>
+#include <QMediaContent>
+#include <QMessageBox>
 
 Widget::Widget(QWidget *parent)
     : QWidget(parent)
@@ -12,6 +14,7 @@ Widget::Widget(QWidget *parent)
     ui->setupUi(this);
 
     //test push github
+    this->setWindowFlags(Qt::Dialog | Qt::WindowTitleHint | Qt::WindowCloseButtonHint | Qt::WindowSystemMenuHint | Qt::MSWindowsFixedSizeDialogHint);
 
     //                      Button style
 
@@ -22,7 +25,9 @@ Widget::Widget(QWidget *parent)
     ui->btnStop->setIcon(style()->standardIcon(QStyle::SP_MediaStop));
     ui->btnNext->setIcon(style()->standardIcon(QStyle::SP_MediaSkipForward));
     ui->btnMute->setIcon(style()->standardIcon(QStyle::SP_MediaVolume));
-   // ui->btnPBM->setIcon(style()->
+    ui->btnPBM->setIcon(QIcon(":/new_icons/ICO/loop.ico"));
+    ui->btnClear->setIcon(QIcon(":/new_icons/ICO/trash.ico"));
+    ui->btnRemove->setIcon(QIcon(":/new_icons/ICO/file-delete.ico"));
 
     ui->lComposition->setFrameStyle(QFrame::Box);
 
@@ -50,7 +55,12 @@ Widget::Widget(QWidget *parent)
     m_player->setPlaylist(m_playlist);
 
     connect(ui->tvPlayList, &QTableView::doubleClicked,
-        [this](const QModelIndex& index){ m_playlist->setCurrentIndex(index.row()); m_player->play(); });
+        [this](const QModelIndex& index)
+        {
+            m_playlist->setCurrentIndex(index.row());
+            m_player->play();
+        }
+    );
     connect(m_playlist, &QMediaPlaylist::currentIndexChanged,
         [this](int index)
         {
@@ -62,10 +72,13 @@ Widget::Widget(QWidget *parent)
 
     PBM_loop = true;
     m_playlist->setPlaybackMode(QMediaPlaylist::Loop);
+
+    LoadPlaylist(DEFAULT_PLAYLIST);
 }
 
 Widget::~Widget()
 {
+    SavePlaylist(DEFAULT_PLAYLIST);
     delete m_player;
     delete m_playlist;
     delete m_playlist_model;
@@ -86,7 +99,7 @@ void Widget::on_btnOpen_clicked()
 //   ui->lComposition -> setText(name_song);
 //   m_player->setMedia(QUrl::fromLocalFile(file));
 
-    QStringList files = QFileDialog::getOpenFileNames(this, "Open files",  "C:\\Users\\Zello\\OneDrive\\Рабочий стол\\Музыка", "Audio files (*.mp3 *.flac)");
+    QStringList files = QFileDialog::getOpenFileNames(this, "Open files",  "C:\\Users\\Zello\\OneDrive\\Рабочий стол\\Музыка", "Audio files (*.mp3 *.flac *.m3u)");
     for(QString filesPath: files)
     {
         QList<QStandardItem*> items;
@@ -95,7 +108,6 @@ void Widget::on_btnOpen_clicked()
         m_playlist_model->appendRow(items);
         m_playlist->addMedia(QUrl(filesPath));
     }
-
 }
 
 
@@ -159,6 +171,52 @@ void Widget::on_btnNext_clicked()
 void Widget::on_btnPBM_clicked()
 {
     PBM_loop = !PBM_loop;
+    ui->btnPBM->setIcon(PBM_loop?QIcon(":/new_icons/ICO/loop.ico"):QIcon(":/new_icons/ICO/random.ico"));
     m_playlist->setPlaybackMode(PBM_loop?QMediaPlaylist::Loop:QMediaPlaylist::Random);
 }
+
+void Widget::on_btnClear_clicked()
+{
+    m_player->stop();
+    m_playlist->clear();
+    m_playlist_model->clear();
+    ui->lComposition->setText("Composition");
+    m_playlist_model->setHorizontalHeaderLabels(QStringList() << "Audio track" << "File path");
+    ui->tvPlayList->hideColumn(1);
+    ui->tvPlayList->horizontalHeader()->setStretchLastSection(true);
+    ui->tvPlayList->setEditTriggers(QAbstractItemView::NoEditTriggers);
+}
+
+void Widget::SavePlaylist(QString filename)
+{
+    QString format = filename.split('.').last();
+    m_playlist->save(QUrl::fromLocalFile(filename), "m3u");
+}
+
+void Widget::LoadPlaylist(QString filename)
+{
+    QString format = filename.split('.').back();
+    m_playlist->load(QUrl::fromLocalFile(filename), format.toStdString().c_str());
+    for(int i = 0; i < m_playlist->mediaCount(); i++)
+    {
+        QMediaContent content = m_playlist->media(i);
+        QString url = content.canonicalUrl().url();
+        QList<QStandardItem*> items;
+        items.append(new QStandardItem(QDir(url).dirName()));
+        items.append(new QStandardItem(url));
+        m_playlist_model->appendRow(items);
+    }
+}
+
+void Widget::on_btnRemove_clicked()
+{
+    QItemSelectionModel* selection = ui->tvPlayList->selectionModel();
+    QModelIndexList rows = selection->selectedRows();
+    for(QModelIndexList::iterator it = rows.begin(); it != rows.end(); ++it)
+    {
+        if(m_playlist->removeMedia(it->row()))
+        m_playlist_model->removeRow(it->row());
+    }
+}
+
 
