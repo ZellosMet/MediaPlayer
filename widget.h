@@ -34,7 +34,7 @@ private slots:
     void on_btnPBM_clicked();
     void on_btnClear_clicked();
     void SavePlaylist(QString filename);
-    void Widget::LoadPlaylist(QString filename);
+    void LoadPlaylist(QString filename);
     void on_btnRemove_clicked();
 
 private:
@@ -44,7 +44,6 @@ private:
     QStandardItemModel* m_playlist_model;
     bool muted;
     bool PBM_loop;
-    qint64 select_element;
-    QString DEFAULT_PLAYLIST = "C:\\Qt\\Learning\\MediaPlayer\\playlist.m3u";
+    QString PLAYLIST = "C:\\Qt\\Learning\\MediaPlayer\\playlist.m3u";
 };
 #endif // WIDGET_H

@@ -34,7 +34,7 @@ Widget::Widget(QWidget *parent)
     //                      Player init
 
     m_player = new QMediaPlayer(this);
-    m_player->setVolume(5);
+    m_player->setVolume(50);
     ui->lVolume->setText(QString("Volume:").append(QString::number(m_player->volume())));
     ui->lDuration->setText("00:00");
     ui->hsVolume->setValue(m_player->volume());
@@ -73,18 +73,17 @@ Widget::Widget(QWidget *parent)
     PBM_loop = true;
     m_playlist->setPlaybackMode(QMediaPlaylist::Loop);
 
-    LoadPlaylist(DEFAULT_PLAYLIST);
+    LoadPlaylist(PLAYLIST);
 }
 
 Widget::~Widget()
 {
-    SavePlaylist(DEFAULT_PLAYLIST);
+    SavePlaylist(PLAYLIST);
     delete m_player;
     delete m_playlist;
     delete m_playlist_model;
     delete ui;
 }
-
 
 void Widget::on_btnOpen_clicked()
 {
@@ -110,13 +109,11 @@ void Widget::on_btnOpen_clicked()
     }
 }
 
-
 void Widget::on_hsVolume_valueChanged(int value)
 {
     m_player->setVolume(value);
     ui->lVolume->setText((QString("Volume: ").append(QString::number(m_player->volume()))));
 }
-
 
 void Widget::on_btnPlay_clicked()
 {
@@ -189,21 +186,19 @@ void Widget::on_btnClear_clicked()
 
 void Widget::SavePlaylist(QString filename)
 {
-    QString format = filename.split('.').last();
     m_playlist->save(QUrl::fromLocalFile(filename), "m3u");
 }
 
 void Widget::LoadPlaylist(QString filename)
 {
-    QString format = filename.split('.').back();
-    m_playlist->load(QUrl::fromLocalFile(filename), format.toStdString().c_str());
+    m_playlist->load(QUrl::fromLocalFile(filename), "m3u");
     for(int i = 0; i < m_playlist->mediaCount(); i++)
     {
         QMediaContent content = m_playlist->media(i);
-        QString url = content.canonicalUrl().url();
+        QString file = content.canonicalUrl().url();
         QList<QStandardItem*> items;
-        items.append(new QStandardItem(QDir(url).dirName()));
-        items.append(new QStandardItem(url));
+        items.append(new QStandardItem(QDir(file).dirName()));
+        items.append(new QStandardItem(file));
         m_playlist_model->appendRow(items);
     }
 }
