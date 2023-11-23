@@ -1,6 +1,6 @@
 <RCC>
-    <qresource prefix="/ico">
-        <file>ico_winamp.ico</file>
-        <file>winamp.ico</file>
+    <qresource prefix="/new_icons">
+        <file>ICO/ico_winamp.ico</file>
+        <file>ICO/winamp.ico</file>
     </qresource>
 </RCC>

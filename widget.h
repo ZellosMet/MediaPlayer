@@ -31,11 +31,14 @@ private slots:
     void on_btnPrev_clicked();
     void on_btnNext_clicked();
 
+    void on_btnPBM_clicked();
+
 private:
     Ui::Widget *ui;
     QMediaPlayer* m_player;
     QMediaPlaylist* m_playlist;
     QStandardItemModel* m_playlist_model;
     bool muted;
+    bool PBM_loop;
 };
 #endif // WIDGET_H

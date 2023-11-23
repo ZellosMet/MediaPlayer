@@ -22,13 +22,14 @@ Widget::Widget(QWidget *parent)
     ui->btnStop->setIcon(style()->standardIcon(QStyle::SP_MediaStop));
     ui->btnNext->setIcon(style()->standardIcon(QStyle::SP_MediaSkipForward));
     ui->btnMute->setIcon(style()->standardIcon(QStyle::SP_MediaVolume));
+   // ui->btnPBM->setIcon(style()->
 
     ui->lComposition->setFrameStyle(QFrame::Box);
 
     //                      Player init
 
     m_player = new QMediaPlayer(this);
-    m_player->setVolume(70);
+    m_player->setVolume(5);
     ui->lVolume->setText(QString("Volume:").append(QString::number(m_player->volume())));
     ui->lDuration->setText("00:00");
     ui->hsVolume->setValue(m_player->volume());
@@ -47,6 +48,20 @@ Widget::Widget(QWidget *parent)
 
     m_playlist = new QMediaPlaylist(m_player);
     m_player->setPlaylist(m_playlist);
+
+    connect(ui->tvPlayList, &QTableView::doubleClicked,
+        [this](const QModelIndex& index){ m_playlist->setCurrentIndex(index.row()); m_player->play(); });
+    connect(m_playlist, &QMediaPlaylist::currentIndexChanged,
+        [this](int index)
+        {
+          ui->lComposition->setText(m_playlist_model->data(m_playlist_model->index(index, 0)).toString());
+          this->setWindowTitle("Winamp - " + ui->lComposition->text());
+          ui->tvPlayList->selectRow(index);
+        }
+    );
+
+    PBM_loop = true;
+    m_playlist->setPlaybackMode(QMediaPlaylist::Loop);
 }
 
 Widget::~Widget()
@@ -131,15 +146,19 @@ void Widget::on_btnMute_clicked()
     ui->btnMute->setIcon(style()->standardIcon(muted?QStyle::SP_MediaVolumeMuted:QStyle::SP_MediaVolume));
 }
 
-
 void Widget::on_btnPrev_clicked()
 {
     m_playlist->previous();
 }
 
-
 void Widget::on_btnNext_clicked()
 {
     m_playlist->next();
+}
+
+void Widget::on_btnPBM_clicked()
+{
+    PBM_loop = !PBM_loop;
+    m_playlist->setPlaybackMode(PBM_loop?QMediaPlaylist::Loop:QMediaPlaylist::Random);
 }
 
