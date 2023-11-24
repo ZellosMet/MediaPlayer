@@ -51,7 +51,7 @@ Widget::Widget(QWidget *parent)
 
     m_playlist = new QMediaPlaylist(m_player);
     m_player->setPlaylist(m_playlist);
-    LoadPlaylist(PLAYLIST);
+    LoadPlaylist();
 
     connect(ui->tvPlayList, &QTableView::doubleClicked,
         [this](const QModelIndex& index)
@@ -68,14 +68,13 @@ Widget::Widget(QWidget *parent)
           ui->tvPlayList->selectRow(index);
         }
     );
-
     PBM_loop = true;
     m_playlist->setPlaybackMode(QMediaPlaylist::Loop);
 }
 
 Widget::~Widget()
 {
-    SavePlaylist(PLAYLIST);
+    SavePlaylist();
     delete m_player;
     delete m_playlist;
     delete m_playlist_model;
@@ -95,7 +94,7 @@ void Widget::on_btnOpen_clicked()
 //   ui->lComposition -> setText(name_song);
 //   m_player->setMedia(QUrl::fromLocalFile(file));
 
-    QStringList files = QFileDialog::getOpenFileNames(this, "Open files",  "C:\\Qt", "Audio files (*.mp3 *.flac *.m3u)");
+    QStringList files = QFileDialog::getOpenFileNames(this, "Open files", "", "Audio files (*.mp3)");
     for(QString filesPath: files)
     {
         QList<QStandardItem*> items;
@@ -181,14 +180,16 @@ void Widget::on_btnClear_clicked()
     ui->tvPlayList->setEditTriggers(QAbstractItemView::NoEditTriggers);
 }
 
-void Widget::SavePlaylist(QString filename)
+void Widget::SavePlaylist()
 {
-    m_playlist->save(QUrl::fromLocalFile(filename), "m3u");
+    QString path_directory = QString(QDir::currentPath()).append("//playlist.m3u");
+    m_playlist->save(QUrl::fromLocalFile(path_directory), "m3u");
 }
 
-void Widget::LoadPlaylist(QString filename)
+void Widget::LoadPlaylist()
 {
-    m_playlist->load(QUrl::fromLocalFile(filename), "m3u");
+    QString path_directory = QString(QDir::currentPath()).append("//playlist.m3u");
+    m_playlist->load(QUrl::fromLocalFile(path_directory), "m3u");
     for(int i = 0; i < m_playlist->mediaCount(); i++)
     {
         QMediaContent content = m_playlist->media(i);
