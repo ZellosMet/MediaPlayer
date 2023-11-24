@@ -7,5 +7,4 @@
         <file>ICO/trash.ico</file>
         <file>ICO/file-delete.ico</file>
     </qresource>
-    <qresource prefix="/"/>
 </RCC>

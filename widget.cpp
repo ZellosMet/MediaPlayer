@@ -5,7 +5,6 @@
 #include <QDir>
 #include <QTime>
 #include <QMediaContent>
-#include <QMessageBox>
 
 Widget::Widget(QWidget *parent)
     : QWidget(parent)
@@ -28,7 +27,6 @@ Widget::Widget(QWidget *parent)
     ui->btnPBM->setIcon(QIcon(":/new_icons/ICO/loop.ico"));
     ui->btnClear->setIcon(QIcon(":/new_icons/ICO/trash.ico"));
     ui->btnRemove->setIcon(QIcon(":/new_icons/ICO/file-delete.ico"));
-
     ui->lComposition->setFrameStyle(QFrame::Box);
 
     //                      Player init
@@ -53,6 +51,7 @@ Widget::Widget(QWidget *parent)
 
     m_playlist = new QMediaPlaylist(m_player);
     m_player->setPlaylist(m_playlist);
+    LoadPlaylist(PLAYLIST);
 
     connect(ui->tvPlayList, &QTableView::doubleClicked,
         [this](const QModelIndex& index)
@@ -72,8 +71,6 @@ Widget::Widget(QWidget *parent)
 
     PBM_loop = true;
     m_playlist->setPlaybackMode(QMediaPlaylist::Loop);
-
-    LoadPlaylist(PLAYLIST);
 }
 
 Widget::~Widget()
@@ -98,7 +95,7 @@ void Widget::on_btnOpen_clicked()
 //   ui->lComposition -> setText(name_song);
 //   m_player->setMedia(QUrl::fromLocalFile(file));
 
-    QStringList files = QFileDialog::getOpenFileNames(this, "Open files",  "C:\\Users\\Zello\\OneDrive\\Рабочий стол\\Музыка", "Audio files (*.mp3 *.flac *.m3u)");
+    QStringList files = QFileDialog::getOpenFileNames(this, "Open files",  "C:\\Qt", "Audio files (*.mp3 *.flac *.m3u)");
     for(QString filesPath: files)
     {
         QList<QStandardItem*> items;
