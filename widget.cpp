@@ -13,7 +13,7 @@ Widget::Widget(QWidget *parent)
     ui->setupUi(this);
 
     //test push github
-    this->setWindowFlags(Qt::Dialog | Qt::WindowTitleHint | Qt::WindowCloseButtonHint | Qt::WindowSystemMenuHint | Qt::MSWindowsFixedSizeDialogHint);
+    this->setWindowFlags(Qt::Dialog  | Qt::MSWindowsFixedSizeDialogHint | Qt::WindowCloseButtonHint | Qt::WindowSystemMenuHint | Qt::MSWindowsFixedSizeDialogHint);
 
     //                      Button style
 
@@ -36,6 +36,7 @@ Widget::Widget(QWidget *parent)
     ui->lVolume->setText(QString("Volume:").append(QString::number(m_player->volume())));
     ui->lDuration->setText("00:00");
     ui->hsVolume->setValue(m_player->volume());
+    ui->tvPlayList->setSelectionBehavior(QAbstractItemView::SelectRows);
     muted = false;
     connect(m_player, &QMediaPlayer::positionChanged, this, &Widget::on_positionChanged);
     connect(m_player, &QMediaPlayer::durationChanged, this, &Widget::on_durationChanged);
