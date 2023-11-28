@@ -71,7 +71,7 @@ Widget::Widget(QWidget *parent)
                time = time.remove("   ").remove("\n");
                time = "00:"+time;
                QStringList time_to_int = time.split(':');
-               int position = (time_to_int[0].toInt()*60+time_to_int[1].toInt()*60+time_to_int[2].toInt()+time_to_int[3].toInt())*1000;
+               int position = (time_to_int[0].toInt()*60+time_to_int[1].toInt()*60+time_to_int[2].toInt())*1000;
 
                m_player->play();
                m_player->setPosition(position);
@@ -114,7 +114,6 @@ void Widget::on_btnOpen_clicked()
         {
             QList<QStandardItem*> items;
             items.append(new QStandardItem(QDir(filesPath).dirName()));
-            //items.append(new QStandardItem(filesPath));
             m_playlist_model->appendRow(items);
             m_playlist->addMedia(QUrl(filesPath));
         }
@@ -218,7 +217,6 @@ void Widget::LoadPlaylist(QString filename)
         QString file = content.canonicalUrl().url();
         QList<QStandardItem*> items;
         items.append(new QStandardItem(QDir(file).dirName()));
-        //items.append(new QStandardItem(file));
         m_playlist_model->appendRow(items);
     }
 }
@@ -235,12 +233,9 @@ void Widget::Load_CUE_Playlist(QString filename)
     while(!file.atEnd())
     {
       QString buffer(file.readLine());
-      // QMessageBox mb(QMessageBox::Icon::Information, "Info", buffer, QMessageBox::Ok, this);
-      // mb.show();
       if(buffer.split(' ')[0] == "PEREFORMER")
       {
         pereformer = buffer.remove(0, strlen("PEREFORMER")+1);
-        qDebug() << flac_file << "\n";
       }
 
       if(buffer.split(' ')[0] == "FILE")
@@ -249,8 +244,6 @@ void Widget::Load_CUE_Playlist(QString filename)
         QDir dir = QFileInfo(file).absoluteDir();
         QString path = dir.absolutePath();
         QString full_name = path+"/"+flac_file;
-        qDebug() << full_name << "\n";
-        qDebug() << flac_file << "\n";
         m_playlist->addMedia(QUrl(full_name));
       }
 
@@ -260,7 +253,6 @@ void Widget::Load_CUE_Playlist(QString filename)
           QList<QStandardItem*> items;
           items.append(new QStandardItem(buffer));
           m_playlist_model->appendRow(items);
-          qDebug() << buffer << "\n";
       }
 
       if(buffer.split(' ', QString::SkipEmptyParts)[0] == "INDEX")
@@ -271,7 +263,6 @@ void Widget::Load_CUE_Playlist(QString filename)
             QStandardItem* f = new QStandardItem(buffer);
             m_playlist_model->setItem(count, 2, f);
             count++;
-            qDebug() << buffer << "\n";
           }
       }
     }
