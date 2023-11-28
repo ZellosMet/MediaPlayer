@@ -46,6 +46,7 @@ private:
     QStandardItemModel* m_playlist_model;
     bool muted;
     bool PBM_loop;
+    bool format_cue;
     QString PLAYLIST = "C:\\Qt\\Learning\\MediaPlayer\\playlist.m3u";
 };
 #endif // WIDGET_H

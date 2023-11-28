@@ -34,12 +34,13 @@ Widget::Widget(QWidget *parent)
     //                      Player init
 
     m_player = new QMediaPlayer(this);
-    m_player->setVolume(50);
+    m_player->setVolume(5);
     ui->lVolume->setText(QString("Volume:").append(QString::number(m_player->volume())));
     ui->lDuration->setText("00:00");
     ui->hsVolume->setValue(m_player->volume());
     ui->tvPlayList->setSelectionBehavior(QAbstractItemView::SelectRows);
     muted = false;
+    format_cue = false;
     connect(m_player, &QMediaPlayer::positionChanged, this, &Widget::on_positionChanged);
     connect(m_player, &QMediaPlayer::durationChanged, this, &Widget::on_durationChanged);
 
@@ -47,7 +48,7 @@ Widget::Widget(QWidget *parent)
 
     m_playlist_model = new QStandardItemModel(this);
     ui->tvPlayList->setModel(m_playlist_model);
-    m_playlist_model->setHorizontalHeaderLabels(QStringList() << "Audio track" << "File path");
+    m_playlist_model->setHorizontalHeaderLabels(QStringList() << "Audio track" << "Time");
     ui->tvPlayList->hideColumn(1);
     ui->tvPlayList->horizontalHeader()->setStretchLastSection(true);
     ui->tvPlayList->setEditTriggers(QAbstractItemView::NoEditTriggers);
@@ -59,8 +60,26 @@ Widget::Widget(QWidget *parent)
     connect(ui->tvPlayList, &QTableView::doubleClicked,
         [this](const QModelIndex& index)
         {
-            m_playlist->setCurrentIndex(index.row());
-            m_player->play();
+            if(!format_cue)
+            {
+                m_playlist->setCurrentIndex(index.row());
+                m_player->play();
+            }
+            else
+            {
+               QString time = ui->tvPlayList->model()->data(ui->tvPlayList->model()->index(index.row(), 2)).toString();
+               time = time.remove("   ").remove("\n");
+               time = "00:"+time;
+               QStringList time_to_int = time.split(':');
+               int position = (time_to_int[0].toInt()*60+time_to_int[1].toInt()*60+time_to_int[2].toInt()+time_to_int[3].toInt())*1000;
+
+               m_player->play();
+               m_player->setPosition(position);
+               ui->hsProgress->setValue(position);
+               ui->lProgress->setText(QString(QTime::fromMSecsSinceStartOfDay(position).toString("hh:mm:ss")));
+               ui->lComposition->setText(ui->tvPlayList->model()->data(ui->tvPlayList->model()->index(index.row(), 0)).toString());
+               this->setWindowTitle("Winamp - " + ui->lComposition->text());
+            }
         }
     );
     connect(m_playlist, &QMediaPlaylist::currentIndexChanged,
@@ -90,11 +109,12 @@ void Widget::on_btnOpen_clicked()
 
     if(files.size()>1)
     {
+        format_cue = false;
         for(QString filesPath: files)
         {
             QList<QStandardItem*> items;
             items.append(new QStandardItem(QDir(filesPath).dirName()));
-            items.append(new QStandardItem(filesPath));
+            //items.append(new QStandardItem(filesPath));
             m_playlist_model->appendRow(items);
             m_playlist->addMedia(QUrl(filesPath));
         }
@@ -189,6 +209,7 @@ void Widget::SavePlaylist(QString filename)
 
 void Widget::LoadPlaylist(QString filename)
 {
+    format_cue = false;
     QString path_directory = QString(QDir::currentPath()).append("//playlist.m3u");
     m_playlist->load(QUrl::fromLocalFile(path_directory), "m3u");
     for(int i = 0; i < m_playlist->mediaCount(); i++)
@@ -197,46 +218,68 @@ void Widget::LoadPlaylist(QString filename)
         QString file = content.canonicalUrl().url();
         QList<QStandardItem*> items;
         items.append(new QStandardItem(QDir(file).dirName()));
-        items.append(new QStandardItem(file));
+        //items.append(new QStandardItem(file));
         m_playlist_model->appendRow(items);
     }
 }
 
 void Widget::Load_CUE_Playlist(QString filename)
 {
+    format_cue = true;
+    int count = 0;
     QString pereformer;
     QString flac_file;
     QFile file(filename);
     if(!file.open(QIODevice::ReadOnly | QIODevice::Text)) return;
+
     while(!file.atEnd())
     {
-      //  QByteArray buffer = file.readLine();
       QString buffer(file.readLine());
       // QMessageBox mb(QMessageBox::Icon::Information, "Info", buffer, QMessageBox::Ok, this);
       // mb.show();
       if(buffer.split(' ')[0] == "PEREFORMER")
       {
-          pereformer = buffer.remove(0, strlen("PEREFORMER")+1);
-          qDebug() << flac_file << "\n";
+        pereformer = buffer.remove(0, strlen("PEREFORMER")+1);
+        qDebug() << flac_file << "\n";
       }
+
       if(buffer.split(' ')[0] == "FILE")
       {
-          //flac_file = buffer.remove(0, sizeof("FILE")+2);
-          flac_file = buffer.remove("FILE \"").remove("\" WAVE\n");
-          QDir dir = QFileInfo(file).absoluteDir();
-          QString path = dir.absolutePath();
-          QString full_name = path+"/"+flac_file;
-          qDebug() << full_name << "\n";
-          qDebug() << flac_file << "\n";
+        flac_file = buffer.remove("FILE \"").remove("\" WAVE\n");
+        QDir dir = QFileInfo(file).absoluteDir();
+        QString path = dir.absolutePath();
+        QString full_name = path+"/"+flac_file;
+        qDebug() << full_name << "\n";
+        qDebug() << flac_file << "\n";
+        m_playlist->addMedia(QUrl(full_name));
+      }
 
+      if(buffer.split(' ', QString::SkipEmptyParts)[0] == "TITLE" && buffer.startsWith("  "))
+      {
+          flac_file = buffer.remove("  TITLE ");
           QList<QStandardItem*> items;
-          items.append(new QStandardItem(dir.dirName()));
-          items.append(new QStandardItem(full_name));
+          items.append(new QStandardItem(buffer));
           m_playlist_model->appendRow(items);
-          m_playlist->addMedia(QUrl(full_name));
+          qDebug() << buffer << "\n";
+      }
+
+      if(buffer.split(' ', QString::SkipEmptyParts)[0] == "INDEX")
+      {
+          if(buffer.split(' ', QString::SkipEmptyParts)[1] == "01")
+          {
+            flac_file = buffer.remove("  INDEX 01");
+            QStandardItem* f = new QStandardItem(buffer);
+            m_playlist_model->setItem(count, 2, f);
+            count++;
+            qDebug() << buffer << "\n";
+          }
       }
     }
     file.close();
+
+    ui->tvPlayList->hideColumn(2);
+    ui->tvPlayList->horizontalHeader()->setStretchLastSection(true);
+    ui->tvPlayList->setEditTriggers(QAbstractItemView::NoEditTriggers);
 }
 
 void Widget::on_btnRemove_clicked()
