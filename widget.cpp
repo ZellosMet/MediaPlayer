@@ -93,6 +93,7 @@ Widget::Widget(QWidget *parent)
     );
     PBM_loop = true;
     m_playlist->setPlaybackMode(QMediaPlaylist::Loop);
+    //
 }
 
 Widget::~Widget()
