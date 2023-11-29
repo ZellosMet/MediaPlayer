@@ -67,12 +67,13 @@ Widget::Widget(QWidget *parent)
             }
             else
             {
+               int position;
                QString time = ui->tvPlayList->model()->data(ui->tvPlayList->model()->index(index.row(), 2)).toString();
                time = time.remove("   ").remove("\n");
-               time = "00:"+time;
                QStringList time_to_int = time.split(':');
-               int position = (time_to_int[0].toInt()*60+time_to_int[1].toInt()*60+time_to_int[2].toInt())*1000;
-
+               time_to_int.size()<4?
+               position = (time_to_int[0].toInt()*60+time_to_int[1].toInt())*1000:
+               position = (time_to_int[0].toInt()*60+time_to_int[1].toInt()*60+time_to_int[2].toInt())*1000;
                m_player->play();
                m_player->setPosition(position);
                ui->hsProgress->setValue(position);
@@ -173,12 +174,92 @@ void Widget::on_btnMute_clicked()
 
 void Widget::on_btnPrev_clicked()
 {
-    m_playlist->previous();
+    if(!format_cue)
+    {
+        m_playlist->previous();
+    }
+    else
+    {
+        int current_position = m_player->position();
+        for(int i = ui->tvPlayList->model()->rowCount()-1; i>0; i--)
+        {
+            int check_position;
+            QString time = ui->tvPlayList->model()->data(ui->tvPlayList->model()->index(i, 2)).toString();
+            time = time.remove("   ").remove("\n");
+            time = "00:"+time;
+            QStringList time_to_int = time.split(':');
+            time_to_int.size()<4?
+            check_position = (time_to_int[0].toInt()*60+time_to_int[1].toInt())*1000:
+            check_position = (time_to_int[0].toInt()*60+time_to_int[1].toInt()*60+time_to_int[2].toInt())*1000;
+
+            if(check_position<current_position)
+            {
+                QString time = ui->tvPlayList->model()->data(ui->tvPlayList->model()->index(i-1, 2)).toString();
+                time = time.remove("   ").remove("\n");
+                time = "00:"+time;
+                QStringList time_to_int = time.split(':');
+                time_to_int.size()<4?
+                check_position = (time_to_int[0].toInt()*60+time_to_int[1].toInt())*1000:
+                check_position = (time_to_int[0].toInt()*60+time_to_int[1].toInt()*60+time_to_int[2].toInt())*1000;
+                m_player->play();
+                m_player->setPosition(check_position);
+                ui->hsProgress->setValue(check_position);
+                ui->lProgress->setText(QString(QTime::fromMSecsSinceStartOfDay(check_position).toString("hh:mm:ss")));
+                ui->lComposition->setText(ui->tvPlayList->model()->data(ui->tvPlayList->model()->index(i-1, 0)).toString());
+                this->setWindowTitle("Winamp - " + ui->lComposition->text());
+                ui->tvPlayList->selectRow(i-1);
+                return;
+            }
+        }
+        m_player->play();
+        m_player->setPosition(0);
+        ui->hsProgress->setValue(0);
+        ui->lProgress->setText(QString(QTime::fromMSecsSinceStartOfDay(0).toString("hh:mm:ss")));
+        ui->lComposition->setText(ui->tvPlayList->model()->data(ui->tvPlayList->model()->index(1, 0)).toString());
+        this->setWindowTitle("Winamp - " + ui->lComposition->text());
+        ui->tvPlayList->selectRow(0);
+    }
 }
 
 void Widget::on_btnNext_clicked()
 {
-    m_playlist->next();
+    if(!format_cue)
+    {
+        m_playlist->next();
+    }
+    else
+    {
+        int current_position = m_player->position();
+        for(int i = 1; i<ui->tvPlayList->model()->rowCount(); i++)
+        {
+            int check_position;
+            QString time = ui->tvPlayList->model()->data(ui->tvPlayList->model()->index(i, 2)).toString();
+            time = time.remove("   ").remove("\n");
+            time = "00:"+time;
+            QStringList time_to_int = time.split(':');
+            time_to_int.size()<4?
+            check_position = (time_to_int[0].toInt()*60+time_to_int[1].toInt())*1000:
+            check_position = (time_to_int[0].toInt()*60+time_to_int[1].toInt()*60+time_to_int[2].toInt())*1000;
+            if(check_position>current_position)
+            {
+                m_player->play();
+                m_player->setPosition(check_position);
+                ui->hsProgress->setValue(check_position);
+                ui->lProgress->setText(QString(QTime::fromMSecsSinceStartOfDay(check_position).toString("hh:mm:ss")));
+                ui->lComposition->setText(ui->tvPlayList->model()->data(ui->tvPlayList->model()->index(i, 0)).toString());
+                this->setWindowTitle("Winamp - " + ui->lComposition->text());
+                ui->tvPlayList->selectRow(i);
+                return;
+            }
+        }
+        m_player->play();
+        m_player->setPosition(0);
+        ui->hsProgress->setValue(0);
+        ui->lProgress->setText(QString(QTime::fromMSecsSinceStartOfDay(0).toString("hh:mm:ss")));
+        ui->lComposition->setText(ui->tvPlayList->model()->data(ui->tvPlayList->model()->index(1, 0)).toString());
+        this->setWindowTitle("Winamp - " + ui->lComposition->text());
+        ui->tvPlayList->selectRow(0);
+    }
 }
 
 void Widget::on_btnPBM_clicked()
@@ -194,7 +275,7 @@ void Widget::on_btnClear_clicked()
     m_playlist->clear();
     m_playlist_model->clear();
     ui->lComposition->setText("Composition");
-    m_playlist_model->setHorizontalHeaderLabels(QStringList() << "Audio track" << "File path");
+    m_playlist_model->setHorizontalHeaderLabels(QStringList() << "Audio track" << "Time");
     ui->tvPlayList->hideColumn(1);
     ui->tvPlayList->horizontalHeader()->setStretchLastSection(true);
     ui->tvPlayList->setEditTriggers(QAbstractItemView::NoEditTriggers);
@@ -268,6 +349,7 @@ void Widget::Load_CUE_Playlist(QString filename)
     }
     file.close();
 
+    m_playlist_model->setHorizontalHeaderLabels(QStringList() << "Audio track" << "Time");
     ui->tvPlayList->hideColumn(2);
     ui->tvPlayList->horizontalHeader()->setStretchLastSection(true);
     ui->tvPlayList->setEditTriggers(QAbstractItemView::NoEditTriggers);
